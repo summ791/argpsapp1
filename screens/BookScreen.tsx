@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Send, Calendar, Loader2, Check } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Calendar, Loader2, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import ScreenHeader from '../components/ScreenHeader';
 
@@ -12,12 +12,28 @@ const BookScreen: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   
+  // Calendar State
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const calendarRef = useRef<HTMLDivElement>(null);
+
   const timeSlots = [
     "Morning (9:00 AM - 10:00 AM)",
     "Evening (4:00 PM - 5:00 PM)",
     "Evening (5:00 PM - 6:00 PM)",
     "Evening (6:00 PM - 7:00 PM)"
   ];
+
+  // Close calendar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+        setShowCalendar(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Helper to validate email format
   const isValidEmail = (email: string) => {
@@ -36,16 +52,63 @@ const BookScreen: React.FC = () => {
     }
   };
 
-  // Handler for Date Picker selection
-  // Converts YYYY-MM-DD (Standard) to DD / MM / YYYY (Readable)
-  const handleDateSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawDate = e.target.value; // Comes as YYYY-MM-DD
-    if (rawDate) {
-      const [year, month, day] = rawDate.split('-');
-      // Format: DD / MM / YYYY
-      setDate(`${day} / ${month} / ${year}`);
+  // --- Modern Calendar Logic ---
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDayOfWeek = new Date(year, month, 1).getDay();
+    
+    const days = [];
+    // Add empty slots for days before the 1st
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      days.push(null);
     }
+    // Add days of the month
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(year, month, i));
+    }
+    return days;
   };
+
+  const handlePrevMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+  };
+
+  const handleDateClick = (selectedDate: Date) => {
+    const day = selectedDate.getDate().toString().padStart(2, '0');
+    const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+    const year = selectedDate.getFullYear();
+    
+    setDate(`${day} / ${month} / ${year}`);
+    setShowCalendar(false);
+  };
+
+  const isToday = (d: Date) => {
+    const today = new Date();
+    return d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+  };
+
+  const isSelected = (d: Date) => {
+    if (!date) return false;
+    // Parse the current date string (DD / MM / YYYY)
+    const parts = date.split(' / ');
+    if (parts.length !== 3) return false;
+    
+    const dDay = parseInt(parts[0], 10);
+    const dMonth = parseInt(parts[1], 10);
+    const dYear = parseInt(parts[2], 10);
+    
+    return d.getDate() === dDay && (d.getMonth() + 1) === dMonth && d.getFullYear() === dYear;
+  };
+  // ---------------------------
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,31 +236,86 @@ const BookScreen: React.FC = () => {
             <p className="text-xs text-slate-400 mt-1 text-right">{phone.length}/10</p>
           </div>
           
-          {/* Preferred Date - Writable Text Input + Hidden Picker */}
-          <div>
+          {/* Preferred Date - Modern Custom Calendar */}
+          <div className="relative" ref={calendarRef}>
             <label className="block text-sm font-bold text-slate-700 mb-2">Preferred Date</label>
-            <div className="relative">
+            <div 
+              className="relative cursor-pointer"
+              onClick={() => !isSubmitting && setShowCalendar(!showCalendar)}
+            >
               <input 
                 type="text" 
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all font-medium text-slate-700 bg-white placeholder:text-gray-400 pr-12"
+                readOnly
+                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all font-medium text-slate-700 bg-white placeholder:text-gray-400 pr-12 cursor-pointer"
                 placeholder="DD / MM / YYYY"
                 required
                 disabled={isSubmitting}
               />
-              {/* Hidden Date Picker Trigger on Icon */}
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6">
-                 <Calendar className="text-emerald-500 absolute pointer-events-none" size={24} />
-                 <input 
-                    type="date" 
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    onChange={handleDateSelect}
-                    tabIndex={-1}
-                    disabled={isSubmitting}
-                 />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 text-emerald-500 pointer-events-none">
+                 <Calendar size={24} />
               </div>
             </div>
+
+            {/* Calendar Popup */}
+            {showCalendar && (
+              <div className="absolute top-full left-0 mt-2 w-full max-w-[320px] bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
+                {/* Header */}
+                <div className="flex justify-between items-center mb-4">
+                  <button 
+                    type="button"
+                    onClick={handlePrevMonth}
+                    className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <span className="font-bold text-slate-800 text-lg">
+                    {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                  </span>
+                  <button 
+                    type="button"
+                    onClick={handleNextMonth}
+                    className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+
+                {/* Days Header */}
+                <div className="grid grid-cols-7 mb-2">
+                  {weekDays.map(day => (
+                    <div key={day} className="text-center text-xs font-bold text-slate-400 py-1">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Days Grid */}
+                <div className="grid grid-cols-7 gap-1">
+                  {getDaysInMonth(currentMonth).map((d, index) => (
+                    <div key={index} className="aspect-square">
+                      {d ? (
+                        <button
+                          type="button"
+                          onClick={() => handleDateClick(d)}
+                          className={`w-full h-full rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200 ${
+                            isSelected(d)
+                              ? 'bg-emerald-500 text-white shadow-md shadow-emerald-100'
+                              : isToday(d)
+                                ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                                : 'text-slate-700 hover:bg-slate-100'
+                          }`}
+                        >
+                          {d.getDate()}
+                        </button>
+                      ) : (
+                        <div></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Preferred Time */}
