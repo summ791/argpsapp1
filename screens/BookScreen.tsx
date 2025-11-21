@@ -36,6 +36,17 @@ const BookScreen: React.FC = () => {
     }
   };
 
+  // Handler for Date Picker selection
+  // Converts YYYY-MM-DD (Standard) to DD / MM / YYYY (Readable)
+  const handleDateSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawDate = e.target.value; // Comes as YYYY-MM-DD
+    if (rawDate) {
+      const [year, month, day] = rawDate.split('-');
+      // Format: DD / MM / YYYY
+      setDate(`${day} / ${month} / ${year}`);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -171,7 +182,7 @@ const BookScreen: React.FC = () => {
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all font-medium text-slate-700 bg-white placeholder:text-gray-400 pr-12"
-                placeholder="dd / mm / yyyy"
+                placeholder="DD / MM / YYYY"
                 required
                 disabled={isSubmitting}
               />
@@ -181,7 +192,7 @@ const BookScreen: React.FC = () => {
                  <input 
                     type="date" 
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    onChange={(e) => setDate(e.target.value)}
+                    onChange={handleDateSelect}
                     tabIndex={-1}
                     disabled={isSubmitting}
                  />
