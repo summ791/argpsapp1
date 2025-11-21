@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Send, Calendar, Loader2 } from 'lucide-react';
+import { Send, Calendar, Loader2, Check } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import ScreenHeader from '../components/ScreenHeader';
 
 const BookScreen: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   
   const timeSlots = [
     "Morning (9:00 AM - 10:00 AM)",
@@ -20,7 +22,7 @@ const BookScreen: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!fullName || !email || !date || !time) {
+    if (!fullName || !email || !phone || !date || !time) {
       alert("Please fill in all fields");
       return;
     }
@@ -39,30 +41,36 @@ const BookScreen: React.FC = () => {
       
       Client Name: ${fullName}
       Client Email: ${email}
+      Client Phone: ${phone}
       Requested Date: ${date}
       Requested Time: ${time}`,
       
       client_name: fullName,
       client_email: email,
+      client_phone: phone,
       booking_date: date,
       booking_time: time
     };
 
-    // 1. Reset form immediately so user sees a clean state
-    setFullName('');
-    setEmail('');
-    setDate('');
-    setTime('');
-
-    // 2. Send email in the background (Admin only)
+    // 1. Send email in the background (Admin only)
     setIsSubmitting(true);
     
     emailjs.send(serviceId, templateId, templateParams, publicKey)
       .then(() => {
         console.log('Booking email sent successfully');
+        // 2. Show Success Modal only after successful send (or immediately if preferring optimistic UI)
+        setShowSuccessModal(true);
+        
+        // 3. Reset form
+        setFullName('');
+        setEmail('');
+        setPhone('');
+        setDate('');
+        setTime('');
       })
       .catch((error) => {
         console.error('EmailJS Error:', error);
+        alert("There was an error sending your booking. Please try again.");
       })
       .finally(() => {
         setIsSubmitting(false);
@@ -100,6 +108,20 @@ const BookScreen: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email address"
+              className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all placeholder:text-gray-400 font-medium"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+
+          {/* Phone Number */}
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Phone Number</label>
+            <input 
+              type="tel" 
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Enter your phone number"
               className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all placeholder:text-gray-400 font-medium"
               required
               disabled={isSubmitting}
@@ -181,6 +203,41 @@ const BookScreen: React.FC = () => {
           </button>
         </form>
       </div>
+
+      {/* Success Modal Popup */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          <div className="bg-white rounded-3xl p-8 w-full max-w-xs relative z-10 flex flex-col items-center text-center shadow-2xl animate-in fade-in zoom-in duration-200">
+            
+            {/* Success Icon */}
+            <div className="w-16 h-16 rounded-full border-[3px] border-emerald-400 flex items-center justify-center mb-5">
+              <Check className="text-emerald-400" size={32} strokeWidth={3.5} />
+            </div>
+            
+            {/* Title */}
+            <h3 className="text-xl font-bold text-slate-800 mb-3 flex items-center gap-2">
+              Booking Successful <span className="text-xl">🎉</span>
+            </h3>
+            
+            {/* Body Text */}
+            <p className="text-slate-600 text-sm leading-relaxed mb-8 font-medium">
+              Thanks for trusting ARGPS Nutritious Lifestyle
+              <br />
+              Your consultation has been confirmed.
+            </p>
+            
+            {/* OK Button */}
+            <button 
+              onClick={() => setShowSuccessModal(false)}
+              className="w-full bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg shadow-emerald-100 active:scale-95 duration-150"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
