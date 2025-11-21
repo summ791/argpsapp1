@@ -123,7 +123,7 @@ const BookScreen: React.FC = () => {
       <ScreenHeader />
       
       <div className="px-6 pt-4">
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">Book Consultation</h2>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2 text-center">Book Consultation</h2>
         <p className="text-slate-500 mb-8 text-center px-4">Schedule your Wellness Consultation with Rithanya Gopinathan</p>
         
         <form className="space-y-6" onSubmit={handleSubmit}>
