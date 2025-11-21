@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Calendar, Loader2, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Send, Calendar, Loader2, Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import ScreenHeader from '../components/ScreenHeader';
 
@@ -15,7 +15,6 @@ const BookScreen: React.FC = () => {
   // Calendar State
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const calendarRef = useRef<HTMLDivElement>(null);
 
   const timeSlots = [
     "Morning (9:00 AM - 10:00 AM)",
@@ -23,17 +22,6 @@ const BookScreen: React.FC = () => {
     "Evening (5:00 PM - 6:00 PM)",
     "Evening (6:00 PM - 7:00 PM)"
   ];
-
-  // Close calendar when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
-        setShowCalendar(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   // Helper to validate email format
   const isValidEmail = (email: string) => {
@@ -88,6 +76,12 @@ const BookScreen: React.FC = () => {
     const year = selectedDate.getFullYear();
     
     setDate(`${day} / ${month} / ${year}`);
+    setShowCalendar(false);
+  };
+
+  const handleClearDate = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation(); // Prevent opening calendar if clicking X
+    setDate('');
     setShowCalendar(false);
   };
 
@@ -236,12 +230,12 @@ const BookScreen: React.FC = () => {
             <p className="text-xs text-slate-400 mt-1 text-right">{phone.length}/10</p>
           </div>
           
-          {/* Preferred Date - Modern Custom Calendar */}
-          <div className="relative" ref={calendarRef}>
+          {/* Preferred Date - Modern Custom Calendar (Centered Modal) */}
+          <div className="relative">
             <label className="block text-sm font-bold text-slate-700 mb-2">Preferred Date</label>
             <div 
               className="relative cursor-pointer"
-              onClick={() => !isSubmitting && setShowCalendar(!showCalendar)}
+              onClick={() => !isSubmitting && setShowCalendar(true)}
             >
               <input 
                 type="text" 
@@ -252,67 +246,102 @@ const BookScreen: React.FC = () => {
                 required
                 disabled={isSubmitting}
               />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 text-emerald-500 pointer-events-none">
-                 <Calendar size={24} />
+              
+              {/* Clear Button (X) or Calendar Icon */}
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
+                {date ? (
+                   <button 
+                     type="button"
+                     onClick={handleClearDate}
+                     className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                   >
+                     <X size={20} />
+                   </button>
+                ) : (
+                   <div className="text-emerald-500 pointer-events-none">
+                     <Calendar size={24} />
+                   </div>
+                )}
               </div>
             </div>
 
-            {/* Calendar Popup */}
+            {/* Calendar Modal (Fixed Center) */}
             {showCalendar && (
-              <div className="absolute top-full left-0 mt-2 w-full max-w-[320px] bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-4">
-                  <button 
-                    type="button"
-                    onClick={handlePrevMonth}
-                    className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600"
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  <span className="font-bold text-slate-800 text-lg">
-                    {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-                  </span>
-                  <button 
-                    type="button"
-                    onClick={handleNextMonth}
-                    className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600"
-                  >
-                    <ChevronRight size={20} />
-                  </button>
-                </div>
+              <div className="fixed inset-0 z-[80] flex items-center justify-center px-4">
+                {/* Backdrop */}
+                <div 
+                  className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" 
+                  onClick={() => setShowCalendar(false)}
+                ></div>
+                
+                {/* Calendar Card */}
+                <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 w-[280px] relative z-10 animate-in fade-in zoom-in-95 duration-200">
+                  {/* Header */}
+                  <div className="flex justify-between items-center mb-3">
+                    <button 
+                      type="button"
+                      onClick={handlePrevMonth}
+                      className="p-1.5 hover:bg-slate-100 rounded-full transition-colors text-slate-600"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    <span className="font-bold text-slate-800 text-base">
+                      {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                    </span>
+                    <button 
+                      type="button"
+                      onClick={handleNextMonth}
+                      className="p-1.5 hover:bg-slate-100 rounded-full transition-colors text-slate-600"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
 
-                {/* Days Header */}
-                <div className="grid grid-cols-7 mb-2">
-                  {weekDays.map(day => (
-                    <div key={day} className="text-center text-xs font-bold text-slate-400 py-1">
-                      {day}
-                    </div>
-                  ))}
-                </div>
+                  {/* Days Header */}
+                  <div className="grid grid-cols-7 mb-1">
+                    {weekDays.map(day => (
+                      <div key={day} className="text-center text-[10px] font-bold text-slate-400 py-1">
+                        {day}
+                      </div>
+                    ))}
+                  </div>
 
-                {/* Days Grid */}
-                <div className="grid grid-cols-7 gap-1">
-                  {getDaysInMonth(currentMonth).map((d, index) => (
-                    <div key={index} className="aspect-square">
-                      {d ? (
-                        <button
-                          type="button"
-                          onClick={() => handleDateClick(d)}
-                          className={`w-full h-full rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200 ${
-                            isSelected(d)
-                              ? 'bg-emerald-500 text-white shadow-md shadow-emerald-100'
-                              : isToday(d)
-                                ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                                : 'text-slate-700 hover:bg-slate-100'
-                          }`}
-                        >
-                          {d.getDate()}
-                        </button>
-                      ) : (
-                        <div></div>
-                      )}
-                    </div>
-                  ))}
+                  {/* Days Grid */}
+                  <div className="grid grid-cols-7 gap-1 mb-3">
+                    {getDaysInMonth(currentMonth).map((d, index) => (
+                      <div key={index} className="aspect-square">
+                        {d ? (
+                          <button
+                            type="button"
+                            onClick={() => handleDateClick(d)}
+                            className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center text-xs font-medium transition-all duration-200 ${
+                              isSelected(d)
+                                ? 'bg-emerald-500 text-white shadow-md shadow-emerald-100'
+                                : isToday(d)
+                                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                                  : 'text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            {d.getDate()}
+                          </button>
+                        ) : (
+                          <div></div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Clear Option inside Calendar */}
+                  <div className="border-t border-slate-100 pt-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => handleClearDate()}
+                      className="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors py-1"
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+
                 </div>
               </div>
             )}
