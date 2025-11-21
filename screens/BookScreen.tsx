@@ -19,11 +19,41 @@ const BookScreen: React.FC = () => {
     "Evening (6:00 PM - 7:00 PM)"
   ];
 
+  // Helper to validate email format
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Handler to restrict phone input to numbers only and max 10 digits
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Remove non-numeric characters
+    const numericValue = value.replace(/\D/g, '');
+    // Limit to 10 digits
+    if (numericValue.length <= 10) {
+      setPhone(numericValue);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Basic empty check
     if (!fullName || !email || !phone || !date || !time) {
       alert("Please fill in all fields");
+      return;
+    }
+
+    // Strict Email Validation
+    if (!isValidEmail(email)) {
+      alert("Please enter a valid email address (e.g., user@example.com)");
+      return;
+    }
+
+    // Strict Phone Validation (Must be exactly 10 digits)
+    if (phone.length !== 10) {
+      alert("Please enter a valid 10-digit phone number");
       return;
     }
 
@@ -58,7 +88,7 @@ const BookScreen: React.FC = () => {
     emailjs.send(serviceId, templateId, templateParams, publicKey)
       .then(() => {
         console.log('Booking email sent successfully');
-        // 2. Show Success Modal only after successful send (or immediately if preferring optimistic UI)
+        // 2. Show Success Modal only after successful send
         setShowSuccessModal(true);
         
         // 3. Reset form
@@ -120,12 +150,16 @@ const BookScreen: React.FC = () => {
             <input 
               type="tel" 
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Enter your phone number"
+              onChange={handlePhoneChange}
+              placeholder="Enter 10-digit phone number"
               className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all placeholder:text-gray-400 font-medium"
               required
               disabled={isSubmitting}
+              maxLength={10}
+              pattern="[0-9]{10}"
+              inputMode="numeric"
             />
+            <p className="text-xs text-slate-400 mt-1 text-right">{phone.length}/10</p>
           </div>
           
           {/* Preferred Date - Writable Text Input + Hidden Picker */}
