@@ -13,7 +13,7 @@ const App: React.FC = () => {
   // Default initial state
   const [profileData, setProfileData] = useState<ProfileData>({
     email: 'argpsnutritiouslifestyle25@gmail.com',
-    phone: '',
+    phone: '8056510590',
     imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&q=80',
     password: 'argps2025'
   });
@@ -38,7 +38,7 @@ const App: React.FC = () => {
           // If data exists, load it, including the password
           setProfileData({
             email: data.email || 'argpsnutritiouslifestyle25@gmail.com',
-            phone: data.phone || '',
+            phone: data.phone || '8056510590',
             imageUrl: data.image_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&q=80',
             password: data.password || 'argps2025'
           });
@@ -47,7 +47,7 @@ const App: React.FC = () => {
            const defaultProfile = {
              id: 1,
              email: 'argpsnutritiouslifestyle25@gmail.com',
-             phone: '',
+             phone: '8056510590',
              image_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&q=80',
              password: 'argps2025'
            };
