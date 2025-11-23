@@ -16,8 +16,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+      /* FORCE INTER FONT ON EVERYTHING */
+      body, button, input, select, textarea {
+        font-family: 'Inter', sans-serif !important;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
       body {
-        font-family: 'Inter', sans-serif;
         -webkit-tap-highlight-color: transparent; /* Remove gray tap highlight on mobile */
         overscroll-behavior-y: none; /* Prevent rubber-banding on iOS */
       }
@@ -45,17 +51,17 @@
         font-size: 16px !important;
       }
     </style>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
-    "@emailjs/browser": "https://aistudiocdn.com/@emailjs/browser@^4.4.1",
-    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.84.0",
     "vite": "https://aistudiocdn.com/vite@^7.2.4",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
+    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.84.0",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "@emailjs/browser": "https://aistudiocdn.com/@emailjs/browser@^4.4.1"
   }
 }
 </script>
