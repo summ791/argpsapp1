@@ -16,6 +16,9 @@ const BookScreen: React.FC = () => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
+  // Time Picker State
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
   const timeSlots = [
     "Morning (9:00 AM - 10:00 AM)",
     "Evening (4:00 PM - 5:00 PM)",
@@ -83,6 +86,12 @@ const BookScreen: React.FC = () => {
     if (e) e.stopPropagation(); // Prevent opening calendar if clicking X
     setDate('');
     setShowCalendar(false);
+  };
+
+  const handleClearTime = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setTime('');
+    setShowTimePicker(false);
   };
 
   const isToday = (d: Date) => {
@@ -347,29 +356,84 @@ const BookScreen: React.FC = () => {
             )}
           </div>
 
-          {/* Preferred Time */}
-          <div>
+          {/* Preferred Time - Modern Custom Time Picker (Centered Modal) */}
+          <div className="relative">
             <label className="block text-sm font-bold text-slate-700 mb-2">Preferred Time</label>
-            <div className="relative">
-              <select
+            <div 
+              className="relative cursor-pointer"
+              onClick={() => !isSubmitting && setShowTimePicker(true)}
+            >
+              <input
+                type="text"
                 value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all font-medium text-slate-700 bg-white cursor-pointer appearance-none pr-12"
+                readOnly
+                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all font-medium text-slate-700 bg-white cursor-pointer pr-12"
+                placeholder="Select preferred time"
                 required
                 disabled={isSubmitting}
-              >
-                <option value="" disabled>Select preferred time</option>
-                {timeSlots.map((slot, index) => (
-                  <option key={index} value={slot}>
-                    {slot}
-                  </option>
-                ))}
-              </select>
-              {/* Custom chevron for select consistency */}
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="m6 9 6 6 6-6"/></svg>
+              />
+              
+              {/* Clear Button (X) Only - No Clock Icon */}
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
+                {time && (
+                   <button 
+                     type="button"
+                     onClick={handleClearTime}
+                     className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                   >
+                     <X size={20} />
+                   </button>
+                )}
               </div>
             </div>
+
+            {/* Time Picker Modal */}
+            {showTimePicker && (
+              <div className="fixed inset-0 z-[80] flex items-center justify-center px-4">
+                <div 
+                  className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" 
+                  onClick={() => setShowTimePicker(false)}
+                ></div>
+                
+                <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 p-5 w-full max-w-[300px] relative z-10 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="text-center mb-4">
+                    <h3 className="font-bold text-slate-800 text-lg">Select Time</h3>
+                    <p className="text-xs text-slate-400">Available consultation slots</p>
+                  </div>
+                  
+                  <div className="flex flex-col space-y-2">
+                    {timeSlots.map((slot, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => {
+                          setTime(slot);
+                          setShowTimePicker(false);
+                        }}
+                        className={`w-full py-3 px-4 rounded-xl text-sm font-medium transition-all duration-200 text-left flex items-center justify-between group ${
+                          time === slot 
+                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-100' 
+                            : 'bg-slate-50 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
+                        }`}
+                      >
+                        <span>{slot}</span>
+                        {time === slot && <Check size={16} />}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <div className="border-t border-slate-100 mt-4 pt-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => handleClearTime()}
+                      className="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors py-1"
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <button 
