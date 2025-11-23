@@ -8,7 +8,8 @@ interface WelcomeScreenProps {
 
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onGetStarted }) => {
   return (
-    <div className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-slate-900">
+    // Changed h-screen to h-[100dvh] to prevent address bar overlap on mobile
+    <div className="relative h-[100dvh] w-full flex items-center justify-center overflow-hidden bg-slate-900">
       {/* Background Image with Overlay */}
       <div 
         className="absolute inset-0 z-0 opacity-60"
