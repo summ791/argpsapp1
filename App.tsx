@@ -119,7 +119,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900">
+    // Updated min-h-screen to min-h-[100dvh] for mobile browsers
+    <div className="min-h-[100dvh] bg-white font-sans text-slate-900">
       {renderScreen()}
       {currentScreen !== 'welcome' && (
         <BottomNav currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
