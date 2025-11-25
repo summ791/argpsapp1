@@ -15,18 +15,21 @@
     <!-- Tailwind CSS via CDN for simplicity -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Configure Tailwind to use Inter as the default sans font -->
+    <!-- Configure Tailwind to use Inter as sans, Merriweather as serif, and Quicksand -->
     <script>
       tailwind.config = {
         theme: {
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
+            serif: ['Merriweather', 'serif'],
+            quicksand: ['Quicksand', 'sans-serif'],
           },
         }
       }
     </script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Added Quicksand to the font imports -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700;900&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
       /* FORCE INTER FONT ON EVERYTHING - Overrides Mobile System Fonts */
       :root {
@@ -34,9 +37,14 @@
       }
       
       body, button, input, select, textarea, div, span, h1, h2, h3, h4, h5, h6, p, a {
-        font-family: 'Inter', sans-serif !important;
+        font-family: 'Inter', sans-serif; 
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* Specific class for Quicksand */
+      .font-quicksand {
+        font-family: 'Quicksand', sans-serif !important;
       }
 
       body {
