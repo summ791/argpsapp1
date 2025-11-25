@@ -16,7 +16,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
   const [showPasswordText, setShowPasswordText] = useState(false);
 
   const [editData, setEditData] = useState<ProfileData>(data);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = () => {
@@ -31,9 +30,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
 
   const handleImageInteraction = () => {
     if (isEditing) {
-      if (fileInputRef.current) {
-        fileInputRef.current.click();
-      }
+      if (fileInputRef.current) fileInputRef.current.click();
     } else {
       setShowPasswordModal(true);
       setPasswordInput('');
@@ -43,7 +40,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     const currentPassword = data.password || 'argps2025';
 
     if (passwordInput === currentPassword) {
@@ -71,22 +67,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
       <ScreenHeader />
 
       <div className="px-6 pt-8 flex flex-col items-center">
-        <div
-          className="relative mb-6 group cursor-pointer"
-          onClick={handleImageInteraction}
-        >
+
+        <div className="relative mb-6 group cursor-pointer" onClick={handleImageInteraction}>
           <div className={`w-32 h-32 rounded-full p-1 ${isEditing ? 'bg-emerald-400' : 'bg-emerald-100'} relative overflow-hidden transition-all duration-300 shadow-md`}>
             <img
               src={isEditing ? editData.imageUrl : data.imageUrl}
               alt="Profile"
               className="w-full h-full rounded-full object-cover border-4 border-white"
             />
-
-            {isEditing && (
-              <div className="absolute inset-0 bg-black/30 flex items-center justify-center animate-in fade-in">
-                <Camera className="text-white drop-shadow-md" size={28} />
-              </div>
-            )}
           </div>
           <input
             type="file"
@@ -100,28 +88,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
         <h2 className="text-2xl font-bold text-slate-800 mb-1 text-center">Rithanya Gopinathan</h2>
         <p className="text-slate-600 text-lg mb-8">Wellness Consultant</p>
 
-        {isEditing && (
-          <div className="flex items-center space-x-4 mb-8 animate-in fade-in slide-in-from-top-2 duration-200">
-            <button
-              onClick={handleSave}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium px-5 py-2 rounded-full flex items-center space-x-1.5 transition-colors shadow-md shadow-emerald-100"
-            >
-              <Check size={16} />
-              <span>Save Changes</span>
-            </button>
-
-            <button
-              onClick={handleCancel}
-              className="text-slate-500 hover:text-slate-700 text-sm font-medium px-3 py-2 transition-colors bg-slate-100 rounded-full"
-            >
-              Cancel
-            </button>
-          </div>
-        )}
-
         <div className="w-full max-w-sm bg-white border border-gray-100 rounded-3xl shadow-sm p-6 space-y-6">
 
-          {/* EMAIL FIELD - UPDATED */}
+          {/* ✅ EMAIL FIELD - QUICKSAND BOLD */}
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-3">Email Address</label>
             <textarea
@@ -132,47 +101,24 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
               className={`w-full px-4 py-3.5 rounded-xl border ${
                 isEditing ? 'border-emerald-400 ring-2 ring-emerald-100 bg-white' : 'border-gray-200 bg-gray-50/50'
               } text-gray-600 focus:outline-none transition-all resize-none`}
-              style={{ fontFamily: 'Calibri, sans-serif', fontSize: '14px' }}
+              style={{ fontFamily: 'Quicksand, sans-serif', fontWeight: '700', fontSize: '14px' }}
             />
           </div>
 
-          {/* PHONE FIELD - UPDATED */}
+          {/* ✅ PHONE FIELD - QUICKSAND BOLD */}
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-3">Phone Number</label>
             <input
               type="tel"
-              placeholder={isEditing ? "Enter phone number" : ""}
               value={isEditing ? editData.phone : data.phone}
               onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
               readOnly={!isEditing}
               className={`w-full px-4 py-3.5 rounded-xl border ${
                 isEditing ? 'border-emerald-400 ring-2 ring-emerald-100 bg-white' : 'border-gray-200 bg-gray-50/50'
-              } text-gray-600 focus:outline-none transition-all placeholder:text-gray-400`}
-              style={{ fontFamily: 'Calibri, sans-serif', fontSize: '14px' }}
+              } text-gray-600 focus:outline-none transition-all`}
+              style={{ fontFamily: 'Quicksand, sans-serif', fontWeight: '700', fontSize: '14px' }}
             />
           </div>
-
-          {isEditing && (
-            <div className="animate-in fade-in slide-in-from-top-1 pt-2 border-t border-gray-100">
-              <label className="block text-sm font-bold text-slate-700 mb-3">Admin Password</label>
-              <div className="relative">
-                <input
-                  type={showPasswordText ? "text" : "password"}
-                  value={editData.password || ''}
-                  onChange={(e) => setEditData({ ...editData, password: e.target.value })}
-                  placeholder="Set new password"
-                  className="w-full px-4 py-3.5 rounded-xl border border-emerald-400 ring-2 ring-emerald-100 bg-white text-gray-600 focus:outline-none transition-all font-sans text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPasswordText(!showPasswordText)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-500"
-                >
-                  {showPasswordText ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
-          )}
 
         </div>
       </div>
