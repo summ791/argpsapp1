@@ -90,22 +90,29 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
 
         <div className="w-full max-w-sm bg-white border border-gray-100 rounded-3xl shadow-sm p-6 space-y-6">
 
-          {/* ✅ EMAIL FIELD - QUICKSAND BOLD */}
+          {/* ✅ EMAIL FIELD - STRAIGHT LINE, 12px */}
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-3">Email Address</label>
             <textarea
               value={isEditing ? editData.email : data.email}
               onChange={(e) => setEditData({ ...editData, email: e.target.value })}
               readOnly={!isEditing}
-              rows={2}
+              rows={1}
               className={`w-full px-4 py-3.5 rounded-xl border ${
                 isEditing ? 'border-emerald-400 ring-2 ring-emerald-100 bg-white' : 'border-gray-200 bg-gray-50/50'
               } text-gray-600 focus:outline-none transition-all resize-none`}
-              style={{ fontFamily: 'Quicksand, sans-serif', fontWeight: '700', fontSize: '14px' }}
+              style={{
+                fontFamily: 'Quicksand, sans-serif',
+                fontWeight: '700',
+                fontSize: '12px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'clip'
+              }}
             />
           </div>
 
-          {/* ✅ PHONE FIELD - QUICKSAND BOLD */}
+          {/* ✅ PHONE FIELD - QUICKSAND BOLD 14px */}
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-3">Phone Number</label>
             <input
@@ -116,7 +123,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
               className={`w-full px-4 py-3.5 rounded-xl border ${
                 isEditing ? 'border-emerald-400 ring-2 ring-emerald-100 bg-white' : 'border-gray-200 bg-gray-50/50'
               } text-gray-600 focus:outline-none transition-all`}
-              style={{ fontFamily: 'Quicksand, sans-serif', fontWeight: '700', fontSize: '14px' }}
+              style={{
+                fontFamily: 'Quicksand, sans-serif',
+                fontWeight: '700',
+                fontSize: '14px'
+              }}
             />
           </div>
 
