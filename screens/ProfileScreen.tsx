@@ -131,14 +131,15 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
         <div className="w-full max-w-sm bg-white border border-gray-100 rounded-3xl shadow-sm p-6 space-y-6">
            <div>
             <label className="block text-sm font-bold text-slate-700 mb-3">Email Address</label>
-            <input 
-              type="email" 
+            {/* Textarea used here for text wrapping */}
+            <textarea 
               value={isEditing ? editData.email : data.email}
               onChange={(e) => setEditData({...editData, email: e.target.value})}
               readOnly={!isEditing}
+              rows={2}
               className={`w-full px-4 py-3.5 rounded-xl border ${
                   isEditing ? 'border-emerald-400 ring-2 ring-emerald-100 bg-white' : 'border-gray-200 bg-gray-50/50'
-              } text-gray-600 focus:outline-none transition-all`}
+              } text-gray-600 focus:outline-none transition-all resize-none font-quicksand text-[16px]`}
             />
           </div>
 
@@ -152,7 +153,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
               readOnly={!isEditing}
                className={`w-full px-4 py-3.5 rounded-xl border ${
                   isEditing ? 'border-emerald-400 ring-2 ring-emerald-100 bg-white' : 'border-gray-200 bg-gray-50/50'
-              } text-gray-600 focus:outline-none transition-all placeholder:text-gray-400`}
+              } text-gray-600 focus:outline-none transition-all placeholder:text-gray-400 font-quicksand text-[16px]`}
             />
           </div>
 
@@ -166,7 +167,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
                   value={editData.password || ''}
                   onChange={(e) => setEditData({...editData, password: e.target.value})}
                   placeholder="Set new password"
-                  className="w-full px-4 py-3.5 rounded-xl border border-emerald-400 ring-2 ring-emerald-100 bg-white text-gray-600 focus:outline-none transition-all"
+                  className="w-full px-4 py-3.5 rounded-xl border border-emerald-400 ring-2 ring-emerald-100 bg-white text-gray-600 focus:outline-none transition-all font-sans text-sm"
                 />
                 <button 
                   type="button"
@@ -211,7 +212,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
                 onChange={(e) => setPasswordInput(e.target.value)}
                 placeholder="Enter password"
                 autoFocus
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none mb-2"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none mb-2 font-sans text-sm"
               />
               {errorMsg && <p className="text-red-500 text-xs mb-3 ml-1 font-medium">{errorMsg}</p>}
               
