@@ -90,14 +90,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
 
         <div className="w-full max-w-sm bg-white border border-gray-100 rounded-3xl shadow-sm p-6 space-y-6">
 
-          {/* ✅ EMAIL FIELD - STRAIGHT LINE, 12px */}
+          {/* ✅ EMAIL FIELD - WRAPPING ENABLED */}
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-3">Email Address</label>
             <textarea
               value={isEditing ? editData.email : data.email}
               onChange={(e) => setEditData({ ...editData, email: e.target.value })}
               readOnly={!isEditing}
-              rows={1}
+              rows={2}
               className={`w-full px-4 py-3.5 rounded-xl border ${
                 isEditing ? 'border-emerald-400 ring-2 ring-emerald-100 bg-white' : 'border-gray-200 bg-gray-50/50'
               } text-gray-600 focus:outline-none transition-all resize-none`}
@@ -105,14 +105,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
                 fontFamily: 'Quicksand, sans-serif',
                 fontWeight: '700',
                 fontSize: '12px',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'clip'
+                whiteSpace: 'normal',
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word'
               }}
             />
           </div>
 
-          {/* ✅ PHONE FIELD - QUICKSAND BOLD 14px */}
+          {/* ✅ PHONE FIELD */}
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-3">Phone Number</label>
             <input
