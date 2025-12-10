@@ -11,6 +11,7 @@ interface ProfileScreenProps {
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showImagePreview, setShowImagePreview] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [showPasswordText, setShowPasswordText] = useState(false);
@@ -19,6 +20,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
   const [editData, setEditData] = useState<ProfileData>(data);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isLongPress = useRef(false);
 
   const handleSave = () => {
     onUpdate(editData);
@@ -30,18 +33,37 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
     setEditData(data); // Reset to original data
   };
 
-  // Handler for profile image interaction
-  const handleImageInteraction = () => {
+  // Interaction Handlers for Profile Photo
+  const handleStartPress = () => {
+    if (isEditing) return;
+    isLongPress.current = false;
+    timerRef.current = setTimeout(() => {
+      isLongPress.current = true;
+      setShowPasswordModal(true);
+      setPasswordInput('');
+      setErrorMsg('');
+    }, 5000);
+  };
+
+  const handleEndPress = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const handleImageClick = (e: React.MouseEvent) => {
     if (isEditing) {
       // If in edit mode, clicking image triggers file upload
       if (fileInputRef.current) {
         fileInputRef.current.click();
       }
     } else {
-      // If in view mode, clicking image triggers password modal
-      setShowPasswordModal(true);
-      setPasswordInput('');
-      setErrorMsg('');
+      // If it was a long press, do nothing (modal already triggered)
+      if (isLongPress.current) return;
+      
+      // Normal tap: Open View-Only Preview
+      setShowImagePreview(true);
     }
   };
 
@@ -78,8 +100,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
       <div className="px-6 pt-8 flex flex-col items-center">
         {/* Profile Image */}
         <div 
-          className="relative mb-6 group cursor-pointer"
-          onClick={handleImageInteraction}
+          className="relative mb-6 group cursor-pointer select-none"
+          onMouseDown={handleStartPress}
+          onMouseUp={handleEndPress}
+          onMouseLeave={handleEndPress}
+          onTouchStart={handleStartPress}
+          onTouchEnd={handleEndPress}
+          onClick={handleImageClick}
+          onContextMenu={(e) => e.preventDefault()}
         >
           <div className={`w-32 h-32 rounded-full p-1 ${isEditing ? 'bg-emerald-400' : 'bg-emerald-100'} relative overflow-hidden transition-all duration-300 shadow-md`}>
              <img 
@@ -184,6 +212,27 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
           )}
         </div>
       </div>
+
+      {/* Image Preview Modal (New) */}
+      {showImagePreview && (
+        <div 
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setShowImagePreview(false)}
+        >
+          <button 
+            onClick={() => setShowImagePreview(false)}
+            className="absolute right-6 top-6 text-white/70 hover:text-white transition-colors"
+          >
+            <X size={32} />
+          </button>
+          <img 
+            src={data.imageUrl} 
+            alt="Profile Full View" 
+            className="max-w-[90vw] max-h-[80vh] object-contain rounded-full border-4 border-emerald-500 shadow-2xl animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
 
       {/* Password Modal */}
       {showPasswordModal && (
