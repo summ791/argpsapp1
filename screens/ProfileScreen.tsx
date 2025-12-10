@@ -139,7 +139,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
               rows={2}
               className={`w-full px-4 py-3.5 rounded-xl border ${
                   isEditing ? 'border-emerald-400 ring-2 ring-emerald-100 bg-white' : 'border-gray-200 bg-gray-50/50'
-              } text-gray-600 focus:outline-none transition-all resize-none font-quicksand text-[16px]`}
+              } text-gray-600 focus:outline-none transition-all resize-none`}
             />
           </div>
 
@@ -153,7 +153,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
               readOnly={!isEditing}
                className={`w-full px-4 py-3.5 rounded-xl border ${
                   isEditing ? 'border-emerald-400 ring-2 ring-emerald-100 bg-white' : 'border-gray-200 bg-gray-50/50'
-              } text-gray-600 focus:outline-none transition-all placeholder:text-gray-400 font-quicksand text-[16px]`}
+              } text-gray-600 focus:outline-none transition-all placeholder:text-gray-400`}
             />
           </div>
 
@@ -187,7 +187,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
 
       {/* Password Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPasswordModal(false)}></div>
           <div className="bg-white rounded-2xl p-6 w-full max-w-xs relative z-10 shadow-2xl animate-in fade-in zoom-in duration-200">
             <button 
