@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Calendar, Loader2, Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import ScreenHeader from '../components/ScreenHeader';
+import { supabase } from '../utils/supabaseClient';
 
 const BookScreen: React.FC = () => {
   const [fullName, setFullName] = useState('');
@@ -12,6 +13,9 @@ const BookScreen: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   
+  // Booking Availability State
+  const [bookedSlots, setBookedSlots] = useState<Record<string, string[]>>({});
+
   // Calendar State
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -25,6 +29,53 @@ const BookScreen: React.FC = () => {
     "Evening (5:00 PM - 6:00 PM)",
     "Evening (6:00 PM - 7:00 PM)"
   ];
+
+  // Fetch bookings from Supabase on mount
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('consultation_bookings')
+          .select('booking_date, time_slot');
+
+        if (error) {
+          console.error('Error fetching bookings:', error);
+          return;
+        }
+
+        if (data) {
+          const mapping: Record<string, string[]> = {};
+          data.forEach((booking: any) => {
+            const dateKey = booking.booking_date; // Expecting YYYY-MM-DD
+            if (dateKey) {
+              if (!mapping[dateKey]) mapping[dateKey] = [];
+              mapping[dateKey].push(booking.time_slot);
+            }
+          });
+          setBookedSlots(mapping);
+        }
+      } catch (err) {
+        console.error('Unexpected error fetching bookings:', err);
+      }
+    };
+
+    fetchBookings();
+  }, []); // Run once on mount
+
+  // Helper to get YYYY-MM-DD for checking availability
+  const getDbDateString = (d: Date): string => {
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Helper to convert app date string (DD / MM / YYYY) to DB date string (YYYY-MM-DD)
+  const appDateToDbDate = (appDate: string): string => {
+    const parts = appDate.split(' / ');
+    if (parts.length !== 3) return '';
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  };
 
   // Helper to validate email format
   const isValidEmail = (email: string) => {
@@ -73,18 +124,22 @@ const BookScreen: React.FC = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
   };
 
-  const handleDateClick = (selectedDate: Date) => {
+  const handleDateClick = (selectedDate: Date, isDisabled: boolean) => {
+    if (isDisabled) return;
+    
     const day = selectedDate.getDate().toString().padStart(2, '0');
     const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
     const year = selectedDate.getFullYear();
     
     setDate(`${day} / ${month} / ${year}`);
+    setTime(''); // Reset time when date changes to ensure validity
     setShowCalendar(false);
   };
 
   const handleClearDate = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation(); // Prevent opening calendar if clicking X
     setDate('');
+    setTime(''); // Also clear time
     setShowCalendar(false);
   };
 
@@ -113,7 +168,7 @@ const BookScreen: React.FC = () => {
   };
   // ---------------------------
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Basic empty check
@@ -134,54 +189,112 @@ const BookScreen: React.FC = () => {
       return;
     }
 
-    // --- EMAILJS CONFIGURATION (ADMIN ONLY) ---
-    const serviceId = 'service_p4rnj4d';
-    const templateId = 'template_j21xpja';
-    const publicKey = 'MFNYuDPIGgrfQhb5C';
-
-    // Capture form data for the email
-    const templateParams = {
-      to_name: "Rithanya Gopinathan",
-      from_name: fullName,
-      from_email: email,
-      message: `New Booking Request from ARGPS App.
-      
-      Client Name: ${fullName}
-      Client Email: ${email}
-      Client Phone: ${phone}
-      Requested Date: ${date}
-      Requested Time: ${time}`,
-      
-      client_name: fullName,
-      client_email: email,
-      client_phone: phone,
-      booking_date: date,
-      booking_time: time
-    };
-
-    // 1. Send email in the background (Admin only)
     setIsSubmitting(true);
-    
-    emailjs.send(serviceId, templateId, templateParams, publicKey)
-      .then(() => {
-        console.log('Booking email sent successfully');
-        // 2. Show Success Modal only after successful send
-        setShowSuccessModal(true);
-        
-        // 3. Reset form
-        setFullName('');
-        setEmail('');
-        setPhone('');
-        setDate('');
-        setTime('');
-      })
-      .catch((error) => {
-        console.error('EmailJS Error:', error);
-        alert("There was an error sending your booking. Please try again.");
-      })
-      .finally(() => {
+
+    try {
+      const dbDate = appDateToDbDate(date);
+
+      // 1. Check Availability in Supabase (Race condition check)
+      const { data: existingBookings, error: checkError } = await supabase
+        .from('consultation_bookings')
+        .select('*')
+        .eq('booking_date', dbDate)
+        .eq('time_slot', time);
+
+      if (checkError) {
+        throw new Error("Could not verify availability. Please try again.");
+      }
+
+      if (existingBookings && existingBookings.length > 0) {
+        alert("This time slot is already booked. Please select another time.");
         setIsSubmitting(false);
+        // Refresh bookings
+        const { data: refreshData } = await supabase.from('consultation_bookings').select('booking_date, time_slot');
+        if (refreshData) {
+            const mapping: Record<string, string[]> = {};
+            refreshData.forEach((booking: any) => {
+              const dk = booking.booking_date;
+              if (dk) {
+                if (!mapping[dk]) mapping[dk] = [];
+                mapping[dk].push(booking.time_slot);
+              }
+            });
+            setBookedSlots(mapping);
+        }
+        return;
+      }
+
+      // 2. Save to Supabase
+      const { error: insertError } = await supabase
+        .from('consultation_bookings')
+        .insert([
+          { 
+            booking_date: dbDate, 
+            time_slot: time,
+            // We include client details if the table supports them, 
+            // but the requirement primarily focused on date/time logic.
+            // Assuming standard columns might not exist based on prompt constraint, 
+            // but usually a booking needs a reference. 
+            // Given "Table columns: - booking_date (DATE) - time_slot (TEXT)" in prompt,
+            // we will strictly insert only these to ensure success if user didn't add other columns.
+          }
+        ]);
+
+      if (insertError) {
+        console.error('Supabase Insert Error:', insertError);
+        throw new Error("Failed to secure booking slot. Please try again.");
+      }
+
+      // 3. Send email via EmailJS (Existing Logic)
+      const serviceId = 'service_p4rnj4d';
+      const templateId = 'template_j21xpja';
+      const publicKey = 'MFNYuDPIGgrfQhb5C';
+
+      const templateParams = {
+        to_name: "Rithanya Gopinathan",
+        from_name: fullName,
+        from_email: email,
+        message: `New Booking Request from ARGPS App.
+        
+        Client Name: ${fullName}
+        Client Email: ${email}
+        Client Phone: ${phone}
+        Requested Date: ${date}
+        Requested Time: ${time}`,
+        
+        client_name: fullName,
+        client_email: email,
+        client_phone: phone,
+        booking_date: date,
+        booking_time: time
+      };
+      
+      await emailjs.send(serviceId, templateId, templateParams, publicKey);
+      
+      console.log('Booking email sent successfully');
+      
+      // 4. Update local state to reflect new booking immediately
+      setBookedSlots(prev => {
+        const newSlots = prev[dbDate] ? [...prev[dbDate], time] : [time];
+        return { ...prev, [dbDate]: newSlots };
       });
+
+      // 5. Show Success Modal
+      setShowSuccessModal(true);
+      
+      // 6. Reset form
+      setFullName('');
+      setEmail('');
+      setPhone('');
+      setDate('');
+      setTime('');
+
+    } catch (error: any) {
+      console.error('Submission Error:', error);
+      alert(error.message || "There was an error processing your booking. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -317,27 +430,37 @@ const BookScreen: React.FC = () => {
 
                   {/* Days Grid */}
                   <div className="grid grid-cols-7 gap-1 mb-3">
-                    {getDaysInMonth(currentMonth).map((d, index) => (
-                      <div key={index} className="aspect-square">
-                        {d ? (
+                    {getDaysInMonth(currentMonth).map((d, index) => {
+                      if (!d) {
+                        return <div key={index} className="aspect-square"></div>;
+                      }
+
+                      // Check availability
+                      const dbDateStr = getDbDateString(d);
+                      const dayBookings = bookedSlots[dbDateStr] || [];
+                      const isFullyBooked = dayBookings.length >= 4;
+
+                      return (
+                        <div key={index} className="aspect-square">
                           <button
                             type="button"
-                            onClick={() => handleDateClick(d)}
+                            onClick={() => handleDateClick(d, isFullyBooked)}
+                            disabled={isFullyBooked}
                             className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center text-xs font-medium transition-all duration-200 ${
                               isSelected(d)
                                 ? 'bg-emerald-500 text-white shadow-md shadow-emerald-100'
                                 : isToday(d)
                                   ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                                  : 'text-slate-700 hover:bg-slate-100'
+                                  : isFullyBooked
+                                    ? 'text-slate-300 cursor-not-allowed bg-slate-50 decoration-slate-300' // Disabled style
+                                    : 'text-slate-700 hover:bg-slate-100'
                             }`}
                           >
                             {d.getDate()}
                           </button>
-                        ) : (
-                          <div></div>
-                        )}
-                      </div>
-                    ))}
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* Clear Option inside Calendar */}
@@ -360,17 +483,23 @@ const BookScreen: React.FC = () => {
           <div className="relative">
             <label className="block text-sm font-bold text-slate-700 mb-2">Preferred Time</label>
             <div 
-              className="relative cursor-pointer"
-              onClick={() => !isSubmitting && setShowTimePicker(true)}
+              className={`relative ${date ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+              onClick={() => {
+                if (!date) {
+                    alert("Please select a date first.");
+                    return;
+                }
+                if (!isSubmitting) setShowTimePicker(true);
+              }}
             >
               <input
                 type="text"
                 value={time}
                 readOnly
-                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all font-medium text-slate-700 bg-white cursor-pointer pr-12"
+                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all font-medium text-slate-700 bg-white cursor-pointer pr-12 disabled:bg-gray-50 disabled:cursor-not-allowed"
                 placeholder="Select preferred time"
                 required
-                disabled={isSubmitting}
+                disabled={isSubmitting || !date}
               />
               
               {/* Clear Button (X) Only - No Clock Icon */}
@@ -398,28 +527,39 @@ const BookScreen: React.FC = () => {
                 <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 p-5 w-full max-w-[300px] relative z-10 animate-in fade-in zoom-in-95 duration-200">
                   <div className="text-center mb-4">
                     <h3 className="font-bold text-slate-800 text-lg">Select Time</h3>
-                    <p className="text-xs text-slate-400">Available consultation slots</p>
+                    <p className="text-xs text-slate-400">Available consultation slots for {date}</p>
                   </div>
                   
                   <div className="flex flex-col space-y-2">
-                    {timeSlots.map((slot, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => {
-                          setTime(slot);
-                          setShowTimePicker(false);
-                        }}
-                        className={`w-full py-3 px-4 rounded-xl text-sm font-medium transition-all duration-200 text-left flex items-center justify-between group ${
-                          time === slot 
-                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-100' 
-                            : 'bg-slate-50 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
-                        }`}
-                      >
-                        <span>{slot}</span>
-                        {time === slot && <Check size={16} />}
-                      </button>
-                    ))}
+                    {timeSlots.map((slot, index) => {
+                      // Check if slot is booked for selected date
+                      const dbDate = appDateToDbDate(date);
+                      const bookedForDay = bookedSlots[dbDate] || [];
+                      const isSlotBooked = bookedForDay.includes(slot);
+
+                      return (
+                        <button
+                          key={index}
+                          type="button"
+                          disabled={isSlotBooked}
+                          onClick={() => {
+                            setTime(slot);
+                            setShowTimePicker(false);
+                          }}
+                          className={`w-full py-3 px-4 rounded-xl text-sm font-medium transition-all duration-200 text-left flex items-center justify-between group ${
+                            time === slot 
+                              ? 'bg-emerald-500 text-white shadow-md shadow-emerald-100' 
+                              : isSlotBooked
+                                ? 'bg-slate-50 text-slate-300 cursor-not-allowed' // Disabled Style
+                                : 'bg-slate-50 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
+                          }`}
+                        >
+                          <span>{slot}</span>
+                          {time === slot && <Check size={16} />}
+                          {isSlotBooked && !time.includes(slot) && <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-500">Booked</span>}
+                        </button>
+                      );
+                    })}
                   </div>
                   
                   <div className="border-t border-slate-100 mt-4 pt-2 text-center">
