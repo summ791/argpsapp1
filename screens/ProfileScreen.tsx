@@ -172,10 +172,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-3">Phone Number</label>
+            <label className="block text-sm font-bold text-slate-700 mb-3">Whatsapp Number</label>
             <input 
               type="tel" 
-              placeholder={isEditing ? "Enter phone number" : ""}
+              placeholder={isEditing ? "Enter Whatsapp number" : ""}
               value={isEditing ? editData.phone : data.phone}
               onChange={(e) => setEditData({...editData, phone: e.target.value})}
               readOnly={!isEditing}
@@ -210,6 +210,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ data, onUpdate }) => {
               </p>
             </div>
           )}
+
+          {/* Appointment Note */}
+          <div className="pt-2">
+            <p className="text-xs text-slate-400 italic text-center">
+              Note: Consultations are by appointment only
+            </p>
+          </div>
         </div>
       </div>
 
